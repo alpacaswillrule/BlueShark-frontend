@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { FilterOptions } from '../types';
 import '../styles/FilterControls.css';
 
@@ -11,93 +11,34 @@ const FilterControls: React.FC<FilterControlsProps> = ({
   onFilterChange, 
   initialFilters 
 }) => {
-  // Initialize states for the radius slider
-  const [radius, setRadius] = useState<number>(initialFilters?.radius || 10); // For UI display
-  const [debouncedRadius, setDebouncedRadius] = useState<number>(initialFilters?.radius || 10); // For API calls
-  
-  // Ref for the debounce timer
-  const radiusDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Initialize state with initial filters or defaults
+  const [radius, setRadius] = useState<number>(initialFilters?.radius || 10);
   const [isUnisex, setIsUnisex] = useState<boolean | undefined>(initialFilters?.is_unisex);
   const [isAccessible, setIsAccessible] = useState<boolean | undefined>(initialFilters?.is_accessible);
   const [hasChangingTable, setHasChangingTable] = useState<boolean | undefined>(initialFilters?.has_changing_table);
-  
-  // Initialize from initialFilters only once on mount
-  useEffect(() => {
-    console.group('🎛️ [FILTER-CONTROLS] Initial setup from initialFilters');
-    console.log('initialFilters:', initialFilters);
-    
-    if (initialFilters) {
-      if (initialFilters.radius !== undefined) {
-        console.log(`Setting initial radius: ${initialFilters.radius}`);
-        setRadius(initialFilters.radius);
-        setDebouncedRadius(initialFilters.radius);
-      }
-      
-      console.log(`Setting initial isUnisex: ${initialFilters.is_unisex}`);
-      setIsUnisex(initialFilters.is_unisex);
-      
-      console.log(`Setting initial isAccessible: ${initialFilters.is_accessible}`);
-      setIsAccessible(initialFilters.is_accessible);
-      
-      console.log(`Setting initial hasChangingTable: ${initialFilters.has_changing_table}`);
-      setHasChangingTable(initialFilters.has_changing_table);
-    }
-    
-    console.groupEnd();
-  }, []); // Empty dependency array means this only runs once on mount
 
-  // Effect to handle debounced radius changes
-  useEffect(() => {
-    // Only trigger if radius has changed from the debounced value
-    if (radius !== debouncedRadius) {
-      console.log(`Debouncing radius change: ${debouncedRadius} → ${radius}`);
-      
-      // Clear any existing timer
-      if (radiusDebounceTimerRef.current) {
-        clearTimeout(radiusDebounceTimerRef.current);
-      }
-      
-      // Set a new timer for 500ms
-      radiusDebounceTimerRef.current = setTimeout(() => {
-        console.log(`Debounce timer expired, updating radius from ${debouncedRadius} to ${radius}`);
-        setDebouncedRadius(radius);
-        
-        // Create filters object with the debounced radius
-        const filters: FilterOptions = {
-          radius: radius,
-          is_unisex: isUnisex,
-          is_accessible: isAccessible,
-          has_changing_table: hasChangingTable
-        };
-        
-        console.log('Sending debounced filter object:', filters);
-        
-        // Call onFilterChange with the updated filters
-        onFilterChange(filters);
-      }, 500); // 500ms debounce delay
-    }
-  }, [radius, debouncedRadius, isUnisex, isAccessible, hasChangingTable, onFilterChange]);
-  
-  // Clean up the timer on unmount
-  useEffect(() => {
-    return () => {
-      if (radiusDebounceTimerRef.current) {
-        clearTimeout(radiusDebounceTimerRef.current);
-      }
-    };
-  }, []);
-  
-  // Handle immediate radius change (for UI update only)
+  // Handle radius change
   const handleRadiusChange = useCallback((newRadius: number) => {
-    console.group('🎛️ [FILTER-CONTROLS] Radius Change (UI)');
+    console.group('🎛️ [FILTER-CONTROLS] Radius Change');
     console.log('Previous radius:', radius);
     console.log('New radius:', newRadius);
     
-    // Update the radius state (this doesn't trigger API call yet)
     setRadius(newRadius);
     
+    // Create filters object
+    const filters: FilterOptions = {
+      radius: newRadius,
+      is_unisex: isUnisex,
+      is_accessible: isAccessible,
+      has_changing_table: hasChangingTable
+    };
+    
+    console.log('Filter object being sent:', filters);
+    
+    // Call onFilterChange with the updated filters
+    onFilterChange(filters);
     console.groupEnd();
-  }, [radius]);
+  }, [radius, isUnisex, isAccessible, hasChangingTable, onFilterChange]);
   
   // Handle feature filter changes
   const handleFeatureChange = useCallback((
