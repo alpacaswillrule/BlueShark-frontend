@@ -85,10 +85,7 @@ const Map: React.FC<MapProps> = ({ filters }) => {
     console.group('🗺️ [MAP] Filters Prop Changed');
     console.log('Received new filters prop:', filters);
     console.log('Filter values explicitly:', {
-      radius: filters.radius,
-      is_unisex: filters.is_unisex,
-      is_accessible: filters.is_accessible,
-      has_changing_table: filters.has_changing_table
+      radius: filters.radius
     });
     console.groupEnd();
   }, [filters]);
@@ -110,15 +107,12 @@ const Map: React.FC<MapProps> = ({ filters }) => {
   }, []);
   */
 
-  // Function to filter bathrooms based on current filters
-  const filterBathrooms = useCallback(() => {
-    console.group('🗺️ [MAP] Filtering Bathrooms');
+  // Function to update bathrooms from cache
+  const updateBathrooms = useCallback(() => {
+    console.group('🗺️ [MAP] Updating Bathrooms');
     console.log('Current filters:', filters);
     console.log('Filter values explicitly:', {
-      radius: filters.radius,
-      is_unisex: filters.is_unisex,
-      is_accessible: filters.is_accessible,
-      has_changing_table: filters.has_changing_table
+      radius: filters.radius
     });
     
     // Get all bathrooms from cache
@@ -134,72 +128,12 @@ const Map: React.FC<MapProps> = ({ filters }) => {
       });
     }
     
-    // Store all bathrooms for reference (commented out as setAllBathrooms is unused)
-    // setAllBathrooms(allBathrooms);
-    
-    // Apply filters
-    let filteredBathrooms = [...allBathrooms];
-    console.log(`Starting with ${filteredBathrooms.length} bathrooms`);
-    
-    // Apply unisex filter if specified (undefined means "any")
-    if (filters.is_unisex !== undefined) {
-      console.log(`Applying unisex filter: ${filters.is_unisex}`);
-      const beforeCount = filteredBathrooms.length;
-      
-      filteredBathrooms = filteredBathrooms.filter(bathroom => {
-        const matches = bathroom.is_unisex === filters.is_unisex;
-        if (!matches) {
-          console.log(`Bathroom ${bathroom.id} excluded: is_unisex=${bathroom.is_unisex}, filter=${filters.is_unisex}`);
-        }
-        return matches;
-      });
-      
-      console.log(`After is_unisex filter: ${filteredBathrooms.length}/${beforeCount} bathrooms remain`);
-    } else {
-      console.log('Unisex filter not applied (Any)');
-    }
-    
-    // Apply accessible filter if specified (undefined means "any")
-    if (filters.is_accessible !== undefined) {
-      console.log(`Applying accessible filter: ${filters.is_accessible}`);
-      const beforeCount = filteredBathrooms.length;
-      
-      filteredBathrooms = filteredBathrooms.filter(bathroom => {
-        const matches = bathroom.is_accessible === filters.is_accessible;
-        if (!matches) {
-          console.log(`Bathroom ${bathroom.id} excluded: is_accessible=${bathroom.is_accessible}, filter=${filters.is_accessible}`);
-        }
-        return matches;
-      });
-      
-      console.log(`After is_accessible filter: ${filteredBathrooms.length}/${beforeCount} bathrooms remain`);
-    } else {
-      console.log('Accessible filter not applied (Any)');
-    }
-    
-    // Apply changing table filter if specified (undefined means "any")
-    if (filters.has_changing_table !== undefined) {
-      console.log(`Applying changing table filter: ${filters.has_changing_table}`);
-      const beforeCount = filteredBathrooms.length;
-      
-      filteredBathrooms = filteredBathrooms.filter(bathroom => {
-        const matches = bathroom.has_changing_table === filters.has_changing_table;
-        if (!matches) {
-          console.log(`Bathroom ${bathroom.id} excluded: has_changing_table=${bathroom.has_changing_table}, filter=${filters.has_changing_table}`);
-        }
-        return matches;
-      });
-      
-      console.log(`After has_changing_table filter: ${filteredBathrooms.length}/${beforeCount} bathrooms remain`);
-    } else {
-      console.log('Changing table filter not applied (Any)');
-    }
-    
-    console.log(`Final filtered bathrooms: ${filteredBathrooms.length}/${allBathrooms.length}`);
+    // No filtering needed, just use all bathrooms from cache
+    console.log(`Using all ${allBathrooms.length} bathrooms from cache`);
     
     // Update the displayed bathrooms
-    console.log('Updating bathrooms state with filtered results');
-    setBathrooms(filteredBathrooms);
+    console.log('Updating bathrooms state with all bathrooms');
+    setBathrooms(allBathrooms);
     console.groupEnd();
   }, [filters]);
 
@@ -310,12 +244,12 @@ const Map: React.FC<MapProps> = ({ filters }) => {
     
     console.log('=== FETCH BATHROOMS END ===');
     
-    // Apply filters to the fetched data
-    filterBathrooms();
+    // Update bathrooms from the fetched data
+    updateBathrooms();
     
     // Reset loading state
     setIsLoading(false);
-  }, [filters, userLocation, droppedPinLocation, isLoading, filterBathrooms]);
+  }, [filters, userLocation, droppedPinLocation, isLoading, updateBathrooms]);
   
   // Function to clear the cache and refresh data
   const refreshData = useCallback(() => {
@@ -367,13 +301,13 @@ const Map: React.FC<MapProps> = ({ filters }) => {
       console.log('Radius changed or no bathrooms, fetching new data');
       fetchBathrooms(true);
     } else {
-      // If only feature filters changed and we have bathrooms, just apply filters locally
-      console.log('Only feature filters changed, applying filters locally');
-      filterBathrooms();
+      // Just update bathrooms from cache
+      console.log('No radius change, updating bathrooms from cache');
+      updateBathrooms();
     }
     
     console.groupEnd();
-  }, [filters, droppedPinLocation, userLocation, fetchBathrooms, filterBathrooms]);
+  }, [filters, droppedPinLocation, userLocation, fetchBathrooms, updateBathrooms]);
   
   // Initial load when user location is available
   useEffect(() => {
@@ -760,7 +694,7 @@ const Map: React.FC<MapProps> = ({ filters }) => {
         {showRadiusCircle && droppedPinLocation && (
           <Circle
             center={droppedPinLocation}
-            radius={filters.radius * 1000} // Convert km to meters
+            radius={filters.radius *100} // Convert km to meters
             options={{
               fillColor: 'rgba(66, 133, 244, 0.2)',
               fillOpacity: 0.35,

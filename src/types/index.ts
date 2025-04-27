@@ -30,11 +30,7 @@ export interface Review {
 }
 
 export interface FilterOptions {
-  radius: number; // in kilometers (default is now 2.0 km)
-  rating_min?: number; // Now fully optional as we've removed it from the UI
-  is_unisex?: boolean;
-  is_accessible?: boolean;
-  has_changing_table?: boolean;
+  radius: number; // in kilometers (default from environment variable, fallback to 5.0 km)
 }
 
 // For backward compatibility during transition

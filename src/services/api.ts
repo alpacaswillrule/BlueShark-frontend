@@ -128,7 +128,7 @@ const executeGet = async <T>(
   );
 };
 
-// Get bathrooms by location (without backend filtering)
+// Get bathrooms by location
 export const getBathrooms = async (
   userLat: number,
   userLng: number,
@@ -143,29 +143,21 @@ export const getBathrooms = async (
       timestamp: new Date().toISOString()
     });
     
-    // Only send location and radius parameters to the backend
-    // Filtering will be done on the frontend
+    // Get default radius from environment variable or use fallback
+    const defaultRadius = process.env.REACT_APP_DEFAULT_RADIUS 
+      ? parseInt(process.env.REACT_APP_DEFAULT_RADIUS, 10) 
+      : 5;
+    
+    // Send location and radius parameters to the backend
     const params: Record<string, any> = {
       latitude: userLat,
       longitude: userLng,
-      radius: filters.radius || 2.0, // Reduced default radius from 5.0 to 2.0 km
-      limit: 100, // Increased limit since we're not filtering on backend
+      radius: filters.radius || defaultRadius,
+      limit: 100,
       // Use a timestamp that changes less frequently (every 30 seconds)
       // This allows for more effective caching while still ensuring data freshness
       _t: Math.floor(Date.now() / 30000)
     };
-    
-    // Only include rating_min as it might affect scoring/sorting on backend
-    if (filters.rating_min !== undefined) {
-      params.rating_min = filters.rating_min;
-    }
-    
-    // Note: We're no longer sending these filter parameters to the backend
-    // is_unisex, is_accessible, and has_changing_table will be filtered on frontend
-    console.log('IMPORTANT: Feature filters are NOT sent to backend:');
-    console.log('- is_unisex:', filters.is_unisex);
-    console.log('- is_accessible:', filters.is_accessible);
-    console.log('- has_changing_table:', filters.has_changing_table);
     
     console.log('Making API request to /bathrooms/ with params:', params);
     console.log('Full URL:', `http://localhost:8000/api/bathrooms/?${new URLSearchParams(params as any).toString()}`);
@@ -337,11 +329,7 @@ export const getLocations = async (
     
     // Map old filters to new filters
     const newFilters: FilterOptions = {
-      radius: filters.radius || 5.0,
-      rating_min: filters.rating_min,
-      is_unisex: undefined,
-      is_accessible: undefined,
-      has_changing_table: undefined
+      radius: filters.radius || 2.0
     };
     
     // Only get restrooms if type filter is 'restroom' or null

@@ -1,6 +1,25 @@
-# Getting Started with Create React App
+# BlueShark Frontend
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Environment Configuration
+
+The application uses environment variables for configuration. Copy the `.env.example` file to a new file named `.env` in the root directory:
+
+```
+cp .env.example .env
+```
+
+### Available Environment Variables
+
+- `REACT_APP_DEFAULT_RADIUS`: Sets the default search radius for bathrooms in kilometers (recommended value: 1-5)
+- `REACT_APP_GOOGLE_MAPS_API_KEY`: Your Google Maps API key (required for map functionality)
+
+## Recent Changes
+
+- Removed the filtering component to simplify the UI
+- Set a default radius of 5 kilometers (adjustable via environment variable)
+- Improved map display to use full screen width
 
 ## Available Scripts
 
