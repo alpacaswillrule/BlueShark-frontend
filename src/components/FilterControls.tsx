@@ -12,7 +12,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
   initialFilters 
 }) => {
   // Initialize state with initial filters or defaults
-  const [radius, setRadius] = useState<number>(initialFilters?.radius || 10);
+  const [radius, setRadius] = useState<number>(initialFilters?.radius || 2); // Reduced default radius from 10km to 2km
   const [isUnisex, setIsUnisex] = useState<boolean | undefined>(initialFilters?.is_unisex);
   const [isAccessible, setIsAccessible] = useState<boolean | undefined>(initialFilters?.is_accessible);
   const [hasChangingTable, setHasChangingTable] = useState<boolean | undefined>(initialFilters?.has_changing_table);

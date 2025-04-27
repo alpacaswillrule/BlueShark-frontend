@@ -325,7 +325,7 @@ const Map: React.FC<MapProps> = ({ filters }) => {
   }, [fetchBathrooms]);
 
   // Store previous radius to detect changes
-  const prevRadiusRef = useRef<number>(10); // Default to match initial radius
+  const prevRadiusRef = useRef<number>(2); // Reduced default radius from 10km to 2km
   
   // Effect to handle filter changes - distinguish between radius and feature filters
   useEffect(() => {
@@ -456,12 +456,25 @@ const Map: React.FC<MapProps> = ({ filters }) => {
   // Handle map click to drop a pin
   const handleMapClick = useCallback((event: google.maps.MapMouseEvent) => {
     if (event.latLng) {
-      const newPinLocation = {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng()
-      };
-      console.log('Pin dropped at:', newPinLocation);
-      setDroppedPinLocation(newPinLocation);
+      // Store the coordinates before clearing
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      
+      // Clear previous pin and radius circle completely
+      setShowRadiusCircle(false);
+      setDroppedPinLocation(null);
+      
+      // Set new pin location after a short delay to ensure cleanup
+      setTimeout(() => {
+        const newPinLocation = { lat, lng };
+        console.log('Pin dropped at:', newPinLocation);
+        setDroppedPinLocation(newPinLocation);
+        
+        // Show radius circle after another short delay
+        setTimeout(() => {
+          setShowRadiusCircle(true);
+        }, 50);
+      }, 100);
     }
   }, []);
   
@@ -494,8 +507,18 @@ const Map: React.FC<MapProps> = ({ filters }) => {
 
   // Get marker icon for bathroom
   const getBathroomMarkerIcon = (bathroom: Bathroom): google.maps.Icon => {
-    // Use the restroom icon from the custom_icons folder
-    const iconPath = '/custom_icons/restroom.png';
+    // Determine which icon to use based on bathroom properties
+    let iconPath = '/custom_icons/restroom.png';
+    
+    // Use purple icon for unisex bathrooms
+    if (bathroom.is_unisex) {
+      iconPath = '/custom_icons/purplerestroom.png';
+    }
+    
+    // Use changing room icon if the bathroom has a changing table
+    if (bathroom.has_changing_table) {
+      iconPath = '/custom_icons/changing_room.png';
+    }
     
     // For user-submitted bathrooms, make the icons larger
     const isUserSubmitted = bathroom.external_source === 'user-submitted' || !bathroom.external_source;
@@ -625,6 +648,47 @@ const Map: React.FC<MapProps> = ({ filters }) => {
         </div>
       )}
       
+      {/* Map Legend */}
+      <div 
+        style={{
+          position: 'absolute',
+          bottom: droppedPinLocation ? '60px' : '10px',
+          right: '10px',
+          zIndex: 1000,
+          backgroundColor: 'white',
+          borderRadius: '4px',
+          padding: '12px',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+          maxWidth: '200px'
+        }}
+      >
+        <div style={{ fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>Legend</div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+          <img 
+            src="/custom_icons/restroom.png" 
+            alt="Standard Restroom" 
+            style={{ width: '24px', height: '24px', marginRight: '8px' }} 
+          />
+          <span>Standard Restroom</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
+          <img 
+            src="/custom_icons/purplerestroom.png" 
+            alt="Unisex/Nonbinary Restroom" 
+            style={{ width: '24px', height: '24px', marginRight: '8px' }} 
+          />
+          <span>Unisex/Nonbinary Restroom</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <img 
+            src="/custom_icons/changing_room.png" 
+            alt="Changing Room" 
+            style={{ width: '24px', height: '24px', marginRight: '8px' }} 
+          />
+          <span>Restroom with Changing Table</span>
+        </div>
+      </div>
+      
       {/* Loading indicator */}
       {isLoading && (
         <div
@@ -657,7 +721,7 @@ const Map: React.FC<MapProps> = ({ filters }) => {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={droppedPinLocation || userLocation || defaultCenter}
-        zoom={12}
+        zoom={20} // Increased zoom level from 12 to 15 for a closer view
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={handleMapClick}
@@ -684,9 +748,9 @@ const Map: React.FC<MapProps> = ({ filters }) => {
             position={droppedPinLocation}
             icon={{
               url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-              scaledSize: new google.maps.Size(40, 40),
+              scaledSize: new google.maps.Size(30, 30), // Reduced size from 40x40 to 30x30
               origin: new google.maps.Point(0, 0),
-              anchor: new google.maps.Point(20, 40)
+              anchor: new google.maps.Point(15, 30) // Adjusted anchor point for smaller size
             }}
             onClick={() => console.log('Dropped pin clicked')}
           />

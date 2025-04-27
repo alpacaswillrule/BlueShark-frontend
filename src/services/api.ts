@@ -148,7 +148,7 @@ export const getBathrooms = async (
     const params: Record<string, any> = {
       latitude: userLat,
       longitude: userLng,
-      radius: filters.radius || 5.0,
+      radius: filters.radius || 2.0, // Reduced default radius from 5.0 to 2.0 km
       limit: 100, // Increased limit since we're not filtering on backend
       // Use a timestamp that changes less frequently (every 30 seconds)
       // This allows for more effective caching while still ensuring data freshness
